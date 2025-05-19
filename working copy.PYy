@@ -1,0 +1,121 @@
+import os
+import secrets
+import hashlib
+import base64
+from flask import Flask, redirect, request, session, render_template
+from requests_oauthlib import OAuth2Session
+
+# Allow insecure transport for OAuth (development only)
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+
+app = Flask(__name__)
+
+app.secret_key = "your_secret_key"  # Replace with a secure key
+
+# Twitter OAuth 2.0 Credentials
+CLIENT_ID = "T0lEa0Z2cGpwblliOWxPVjFCdWI6MTpjaQ"
+CLIENT_SECRET = "LaAcmNS8Jk5yRvtY7HyN76U_8GHQa56JIrTfDCDwftMFGeX64O"
+REDIRECT_URI = "http://127.0.0.1:5000/callback"  # Local callback
+
+AUTHORIZATION_BASE_URL = "https://twitter.com/i/oauth2/authorize"
+TOKEN_URL = "https://api.twitter.com/2/oauth2/token"
+
+SCOPES = ["tweet.read", "users.read"]  # Read-only access
+
+def generate_pkce_pair():
+    """Generates a PKCE code verifier and challenge."""
+    code_verifier = secrets.token_urlsafe(64)
+    code_challenge = base64.urlsafe_b64encode(
+        hashlib.sha256(code_verifier.encode()).digest()
+    ).rstrip(b'=').decode('utf-8')
+    return code_verifier, code_challenge
+
+@app.route("/")
+def index():
+    """Homepage with a login link."""
+    return render_template("index.html")
+
+
+@app.route("/login")
+def login():
+    """Handles Twitter OAuth login."""
+    code_verifier, code_challenge = generate_pkce_pair()
+    session["code_verifier"] = code_verifier
+
+    twitter = OAuth2Session(CLIENT_ID, scope=SCOPES, redirect_uri=REDIRECT_URI)
+    auth_url, state = twitter.authorization_url(
+        AUTHORIZATION_BASE_URL,
+        code_challenge=code_challenge,
+        code_challenge_method="S256"
+    )
+    session["oauth_state"] = state
+    return redirect(auth_url)
+
+@app.route("/callback")
+def callback():
+    """Handles OAuth callback, saves token, and redirects to tweet page."""
+    if "code_verifier" not in session:
+        return "Error: Missing code verifier.", 400
+
+    twitter = OAuth2Session(CLIENT_ID, state=session.get("oauth_state"), redirect_uri=REDIRECT_URI)
+    
+    try:
+        token = twitter.fetch_token(
+            TOKEN_URL,
+            client_secret=CLIENT_SECRET,
+            code_verifier=session["code_verifier"],
+            authorization_response=request.url
+        )
+        session["oauth_token"] = token  # Store token in session
+
+        return redirect("/tweet")  # Redirect to tweet page
+
+    except Exception as e:
+        return f"Error during authentication: {str(e)}", 400
+
+@app.route("/tweet", methods=["GET", "POST"])
+def fetch_tweets():
+    """Fetches tweets for a given username after authentication."""
+    if "oauth_token" not in session:
+        return redirect("/login")
+
+    if request.method == "POST":
+        username = request.form.get("username")
+        if not username:
+            return render_template("tweet.html", error="Please enter a Twitter username.")
+
+        token = session["oauth_token"]
+        twitter = OAuth2Session(CLIENT_ID, token=token)
+
+        try:
+            # Get user ID from username
+            user_url = f"https://api.twitter.com/2/users/by/username/{username}"
+            user_response = twitter.get(user_url)
+            user_data = user_response.json()
+            print("User API Response:", user_data)  # Debugging
+
+            if "data" not in user_data:
+                return render_template("tweet.html", error="User not found.")
+
+            user_id = user_data["data"]["id"]
+
+            # Fetch tweets from user
+            tweet_url = f"https://api.twitter.com/2/users/{user_id}/tweets?max_results=5&tweet.fields=text"
+            tweet_response = twitter.get(tweet_url)
+            tweets = tweet_response.json()
+            print("Tweets API Response:", tweets)  # Debugging
+
+            if "data" in tweets:
+                tweet_texts = [tweet["text"] for tweet in tweets["data"]]
+            else:
+                tweet_texts = ["No tweets found for this user."]
+
+            return render_template("tweet.html", tweets=tweet_texts, username=username)
+
+        except Exception as e:
+            return render_template("tweet.html", error=f"Error fetching tweets: {str(e)}")
+
+    return render_template("tweet.html")  # Show form to enter username
+
+if __name__ == "__main__":
+    app.run(debug=True)

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predict Personality</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+        input {
+            padding: 10px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .logout-btn {
+            background: red;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+            display: inline-block;
+        }
+        .logout-btn:hover {
+            background: darkred;
+        }
+    </style>
+</head>
+<body>
+    <h1>Enter Twitter Username</h1>
+    <form method="post" action="/predict">
+        <input type="text" name="username" required>
+        <button type="submit">Fetch Tweets &amp; Predict Personality</button>
+    </form>
+
+    {% if error %}
+    <p style="color: red;">{{ error }}</p>
+    {% endif %}
+
+    <!-- Logout button -->
+    <form action="/logout" method="get">
+        <button class="logout-btn" type="submit">Logout</button>
+    </form>
+</body>
+</html>

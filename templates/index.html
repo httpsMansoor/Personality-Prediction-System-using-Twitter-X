@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+  <title>Personality Prediction System</title>
+  <meta content="AI-powered personality prediction system using Twitter data" name="description">
+  <meta content="MBTI, personality, AI, machine learning, Twitter analysis" name="keywords">
+
+  <!-- Favicons -->
+  <!-- <link href="assets/img/favicon.png" rel="icon"> -->
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='assets/img/apple-touch-icon.png') }}">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/vendor/bootstrap/css/bootstrap.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/vendor/icofont/icofont.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/vendor/boxicons/css/boxicons.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/vendor/venobox/venobox.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/vendor/remixicon/remixicon.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/vendor/owl.carousel/assets/owl.carousel.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/vendor/aos/aos.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+  <!-- Template Main CSS File -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/style.css') }}">
+
+  <style>
+    :root {
+      --primary-color: #1acc8d;
+      --secondary-color: #17a2b8;
+      --dark-color: #2c4964;
+      --light-color: #f8f9fa;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      color: var(--dark-color);
+    }
+
+    .hero {
+      background: linear-gradient(135deg, rgba(26, 204, 141, 0.9), rgba(23, 162, 184, 0.9)), url("{{ url_for('static', filename='assets/img/hero-bg.jpg') }}") center/cover;
+      min-height: 100vh;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url("{{ url_for('static', filename='assets/img/pattern.png') }}") repeat;
+      opacity: 0.1;
+    }
+
+    .hero h1 {
+      font-size: 3.5rem;
+      font-weight: 700;
+      line-height: 1.2;
+      color: #fff;
+      margin-bottom: 30px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .hero p {
+      font-size: 1.2rem;
+      line-height: 1.6;
+    }
+
+    .btn-get-started {
+      font-family: "Montserrat", sans-serif;
+      font-weight: 500;
+      font-size: 16px;
+      letter-spacing: 1px;
+      display: inline-block;
+      padding: 15px 35px;
+      border-radius: 50px;
+      transition: all 0.5s;
+      color: #fff;
+      background: var(--primary-color);
+      box-shadow: 0 8px 28px rgba(26, 204, 141, 0.45);
+    }
+
+    .btn-get-started:hover {
+      transform: translateY(-2px);
+      background: var(--secondary-color);
+      box-shadow: 0 10px 30px rgba(23, 162, 184, 0.5);
+      color: #fff;
+      text-decoration: none;
+    }
+
+    /* Header Styles */
+    #header {
+      height: 80px;
+      transition: all 0.5s;
+      z-index: 997;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    #header.header-transparent {
+      background: rgba(255, 255, 255, 0.1) !important;
+      box-shadow: none;
+    }
+
+    #header.header-scrolled {
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    #header .logo h1 {
+      font-size: 24px;
+      margin: 0;
+      padding: 0;
+      line-height: 1;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    #header .logo h1 a {
+      color: var(--dark-color);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+    }
+
+    #header .logo h1 a i {
+      font-size: 28px;
+      margin-right: 10px;
+      color: var(--primary-color);
+    }
+
+    .header-transparent .logo h1 a,
+    .header-transparent .nav-menu a {
+      color: #fff !important;
+    }
+
+    .header-transparent .nav-menu a i {
+      color: rgba(255, 255, 255, 0.9) !important;
+    }
+
+    .header-transparent .nav-menu a:hover {
+      color: var(--primary-color) !important;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .header-scrolled .logo h1 a,
+    .header-scrolled .nav-menu a {
+      color: var(--dark-color) !important;
+    }
+
+    .header-scrolled .nav-menu a i {
+      color: var(--primary-color) !important;
+    }
+
+    .header-scrolled .nav-menu a:hover {
+      color: var(--primary-color) !important;
+      background: rgba(26, 204, 141, 0.1);
+    }
+
+    .nav-menu {
+      padding: 0;
+      display: block;
+    }
+
+    .nav-menu * {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .nav-menu > ul {
+      display: flex;
+      align-items: center;
+      margin: 0;
+      padding: 0;
+    }
+
+    .nav-menu > ul > li {
+      position: relative;
+      white-space: nowrap;
+      padding: 10px 0 10px 28px;
+    }
+
+    .nav-menu a {
+      display: flex;
+      align-items: center;
+      color: var(--dark-color);
+      padding: 0;
+      font-size: 15px;
+      font-weight: 500;
+      white-space: nowrap;
+      transition: 0.3s;
+      text-decoration: none;
+    }
+
+    .nav-menu a i {
+      font-size: 16px;
+      margin-right: 8px;
+      line-height: 0;
+      color: var(--primary-color);
+    }
+
+    .nav-menu a:hover, 
+    .nav-menu .active > a {
+      color: var(--primary-color);
+    }
+
+    .nav-menu > ul > li > a.btn-get-started {
+      background: var(--primary-color);
+      color: #fff;
+      padding: 10px 25px;
+      margin-left: 15px;
+      border-radius: 50px;
+      border: 2px solid transparent;
+    }
+
+    .nav-menu > ul > li > a.btn-get-started:hover {
+      background: var(--secondary-color);
+      border-color: var(--primary-color);
+    }
+
+    /* Adjust the container for better alignment */
+    #header .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 100%;
+    }
+
+    /* Make navigation responsive */
+    @media (max-width: 991px) {
+      .nav-menu {
+        display: none;
+      }
+    }
+
+    .features-section {
+      padding: 100px 0;
+      background: var(--light-color);
+    }
+
+    .feature-box {
+      padding: 40px 30px;
+      border-radius: 20px;
+      background: white;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+
+    .feature-box:hover {
+      transform: translateY(-10px);
+    }
+
+    .feature-box:hover::before {
+      transform: scaleX(1);
+    }
+
+    .feature-icon {
+      width: 70px;
+      height: 70px;
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 25px;
+      color: white;
+      font-size: 30px;
+    }
+
+    .stats-section {
+      padding: 80px 0;
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+    }
+
+    .stat-box {
+      text-align: center;
+      padding: 30px;
+    }
+
+    .stat-number {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #fff, #f0f0f0);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .stat-label {
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+
+    .how-it-works {
+      padding: 100px 0;
+      background: white;
+    }
+
+    .step-box {
+      text-align: center;
+      padding: 30px;
+      position: relative;
+    }
+
+    .step-number {
+      width: 40px;
+      height: 40px;
+      background: var(--primary-color);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      margin: 0 auto 20px;
+    }
+
+    .step-box::after {
+      content: '';
+      position: absolute;
+      top: 60px;
+      right: -50%;
+      width: 100%;
+      height: 2px;
+      background: var(--primary-color);
+      z-index: 0;
+    }
+
+    .step-box:last-child::after {
+      display: none;
+    }
+
+    #footer {
+      background: var(--dark-color);
+      padding: 50px 0 30px;
+      color: #fff;
+      font-size: 14px;
+      position: relative;
+    }
+
+    #footer::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    }
+
+    .footer-info {
+      margin-bottom: 30px;
+    }
+
+    .footer-info h3 {
+      font-size: 24px;
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid var(--primary-color);
+      display: inline-block;
+    }
+
+    .footer-links h4 {
+      font-size: 18px;
+      margin-bottom: 20px;
+      position: relative;
+      padding-bottom: 12px;
+    }
+
+    .footer-links h4::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 50px;
+      height: 2px;
+      background: var(--primary-color);
+    }
+
+    .footer-links ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .footer-links ul li {
+      margin-bottom: 15px;
+    }
+
+    .footer-links ul a {
+      color: rgba(255, 255, 255, 0.8);
+      transition: 0.3s;
+      text-decoration: none;
+    }
+
+    .footer-links ul a:hover {
+      color: var(--primary-color);
+      padding-left: 5px;
+    }
+
+    .social-links a {
+      font-size: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--primary-color);
+      color: #fff;
+      line-height: 1;
+      padding: 9px 0;
+      margin-right: 8px;
+      border-radius: 50%;
+      text-align: center;
+      width: 36px;
+      height: 36px;
+      transition: 0.3s;
+    }
+
+    .social-links a:hover {
+      background: var(--secondary-color);
+      transform: translateY(-3px);
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-20px); }
+      100% { transform: translateY(0px); }
+    }
+
+    .floating-image {
+      animation: float 6s ease-in-out infinite;
+    }
+
+    .counter-box {
+      text-align: center;
+      padding: 20px;
+      transition: all 0.3s ease;
+    }
+
+    .counter-icon {
+      font-size: 40px;
+      color: var(--primary-color);
+      margin-bottom: 15px;
+    }
+
+    .counter-number {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--dark-color);
+      margin-bottom: 10px;
+    }
+
+    .counter-label {
+      font-size: 1.1rem;
+      color: #666;
+    }
+
+    .about {
+      padding: 80px 0;
+      background: var(--light-color);
+      overflow: hidden;
+    }
+
+    .about-img-wrapper {
+      position: relative;
+      padding: 20px;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .about-img-wrapper::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: 20px;
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      opacity: 0.1;
+      z-index: 0;
+    }
+
+    .about-img {
+      width: 100%;
+      height: auto;
+      border-radius: 15px;
+      position: relative;
+      z-index: 1;
+      transition: transform 0.3s ease;
+    }
+
+    .about-img-wrapper:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .about-img-wrapper:hover .about-img {
+      transform: scale(1.02);
+    }
+
+    .icon-boxes {
+      padding: 30px;
+    }
+
+    .icon-box {
+      padding: 30px;
+      border-radius: 15px;
+      background: white;
+      box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
+      margin-bottom: 25px;
+      transition: all 0.3s ease;
+    }
+
+    .icon-box:hover {
+      transform: translateX(5px);
+      box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .icon-box .icon {
+      margin-bottom: 20px;
+    }
+
+    .icon-box .icon i {
+      font-size: 36px;
+      color: var(--primary-color);
+    }
+
+    .icon-box h4 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      color: var(--dark-color);
+    }
+
+    .icon-box p {
+      font-size: 15px;
+      line-height: 1.6;
+      color: #666;
+    }
+
+    .progress {
+      height: 25px;
+      border-radius: 12px;
+      background-color: #f8f9fa;
+    }
+    
+    .progress-bar {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    }
+    
+    .progress-steps {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+    
+    .step {
+      text-align: center;
+      color: #6c757d;
+      font-size: 0.9rem;
+    }
+    
+    .step i {
+      display: block;
+      font-size: 1.2rem;
+      margin-bottom: 5px;
+    }
+    
+    .step.active {
+      color: var(--primary-color);
+    }
+    
+    .step.completed {
+      color: var(--secondary-color);
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ======= Header ======= -->
+  <header id="header" class="fixed-top header-transparent">
+    <div class="container">
+      <div class="logo">
+        <h1>
+          <a href="/">
+            <i class="fas fa-brain"></i>
+            <span>Personality Prediction System</span>
+          </a>
+        </h1>
+      </div>
+
+      <nav class="nav-menu">
+        <ul>
+          <li class="active"><a href="#hero"><i class="fas fa-home"></i>Home</a></li>
+          <li><a href="#features"><i class="fas fa-star"></i>Features</a></li>
+          <li><a href="#how-it-works"><i class="fas fa-cogs"></i>How it Works</a></li>
+          <li><a href="#about"><i class="fas fa-info-circle"></i>About</a></li>
+          <li><a href="#team"><i class="fas fa-users"></i>Team</a></li>
+          {% if logged_in %}
+            <li><a href="#contact"><i class="fas fa-magic"></i>Predict</a></li>
+            <li><a href="/logout"><i class="fas fa-sign-out-alt"></i>Logout</a></li>
+          {% else %}
+            <li><a href="/login" class="btn-get-started"><i class="fab fa-twitter"></i>Login with Twitter</a></li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+  </header>
+  <!-- End Header -->
+
+  <!-- ======= Hero Section ======= -->
+  <section id="hero" class="hero d-flex align-items-center">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-6 pt-5 pt-lg-0 order-2 order-lg-1 d-flex flex-column justify-content-center">
+          <div data-aos="fade-up">
+            <h1>Discover Your True Personality with <span class="text-white">Personality Prediction System</span></h1>
+            <p class="text-white mb-4">
+              Unlock the power of AI to analyze your social media presence and reveal your Myers-Briggs Type Indicator (MBTI).
+              Our advanced machine learning algorithms provide deep insights into your personality traits.
+            </p>
+            <div class="d-flex">
+              <a href="#contact" class="btn-get-started scrollto mr-3">
+                <i class="fas fa-rocket mr-2"></i> Get Started
+              </a>
+              <a href="#how-it-works" class="btn-get-started scrollto" style="background: rgba(255,255,255,0.2)">
+                <i class="fas fa-play mr-2"></i> How it Works
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6 order-1 order-lg-2 hero-img">
+          <img src="{{ url_for('static', filename='assets/img/myers.png') }}" class="img-fluid floating-image" alt="">
+        </div>
+      </div>
+    </div>
+
+    <svg class="hero-waves" xmlns="http://www.w3.org/2000/svg"
+      xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 24 150 28" preserveAspectRatio="none">
+      <defs>
+        <path id="wave-path" d="M-160 44c30 0 58-18 88-18
+                                s58 18 88 18
+                                58-18 88-18
+                                58 18 88 18
+                                v44h-352z">
+        </path>
+      </defs>
+      <g class="wave1">
+        <use xlink:href="#wave-path" x="50" y="3" fill="rgba(255,255,255, .1)"></use>
+      </g>
+      <g class="wave2">
+        <use xlink:href="#wave-path" x="50" y="0" fill="rgba(255,255,255, .2)"></use>
+      </g>
+      <g class="wave3">
+        <use xlink:href="#wave-path" x="50" y="9" fill="#fff"></use>
+      </g>
+    </svg>
+  </section>
+  <!-- End Hero Section -->
+
+  <main id="main">
+    <!-- ======= Features Section ======= -->
+    <section id="features" class="features-section">
+      <div class="container">
+        <div class="section-title text-center mb-5" data-aos="fade-up">
+          <h2>Features</h2>
+          <p>Why Choose Personality Prediction System?</p>
+        </div>
+
+        <div class="row">
+          <div class="col-lg-4 mb-4" data-aos="fade-up" data-aos-delay="100">
+            <div class="feature-box">
+              <div class="feature-icon">
+                <i class="fas fa-brain"></i>
+              </div>
+              <h3>Advanced AI Analysis</h3>
+              <p>Powered by state-of-the-art BERT models for accurate personality prediction from your tweets.</p>
+            </div>
+          </div>
+
+          <div class="col-lg-4 mb-4" data-aos="fade-up" data-aos-delay="200">
+            <div class="feature-box">
+              <div class="feature-icon">
+                <i class="fas fa-bolt"></i>
+              </div>
+              <h3>Real-time Processing</h3>
+              <p>Get instant personality insights from your most recent social media activities.</p>
+            </div>
+          </div>
+
+          <div class="col-lg-4 mb-4" data-aos="fade-up" data-aos-delay="300">
+            <div class="feature-box">
+              <div class="feature-icon">
+                <i class="fas fa-lock"></i>
+              </div>
+              <h3>Secure & Private</h3>
+              <p>Your data is processed securely and we never store sensitive information.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======= Stats Section ======= -->
+    <section class="stats-section">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-3 col-md-6">
+            <div class="stat-box" data-aos="fade-up">
+              <div class="stat-number" data-counter="{{ stats.total_predictions }}">0</div>
+              <div class="stat-label">Personalities Analyzed</div>
+            </div>
+          </div>
+
+          <div class="col-lg-3 col-md-6">
+            <div class="stat-box" data-aos="fade-up" data-aos-delay="100">
+              <div class="stat-number" data-counter="{{ stats.mbti_types }}">0</div>
+              <div class="stat-label">MBTI Types</div>
+            </div>
+          </div>
+
+          <div class="col-lg-3 col-md-6">
+            <div class="stat-box" data-aos="fade-up" data-aos-delay="200">
+              <div class="stat-number" data-counter="{{ stats.accuracy_rate }}">0</div>
+              <div class="stat-label">Accuracy Rate</div>
+            </div>
+          </div>
+
+          <div class="col-lg-3 col-md-6">
+            <div class="stat-box" data-aos="fade-up" data-aos-delay="300">
+              <div class="stat-number" data-counter="{{ stats.hour_support }}">0</div>
+              <div class="stat-label">Hour Support</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======= Get Started Section ======= -->
+    <section id="contact" class="contact">
+      <div class="container">
+        {% if logged_in %}
+        <div class="section-title" data-aos="fade-up">
+          <h2>Get Started</h2>
+          <p>Enter Your Twitter Handle</p>
+        </div>
+
+        <div class="row justify-content-center">
+          <div class="col-lg-8" data-aos="fade-up" data-aos-delay="200">
+            <div class="card shadow-lg">
+              <div class="card-body p-5">
+                <form method="POST" action="/predict" id="predictionForm">
+                  {% if error %}
+                  <div class="alert alert-danger d-flex align-items-center">
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    {{ error }}
+                  </div>
+                  {% endif %}
+                  <div class="form-group">
+                    <div class="input-group">
+                      <div class="input-group-prepend">
+                        <span class="input-group-text">@</span>
+                      </div>
+                      <input type="text" name="username" class="form-control" id="twitter_handle"
+                             placeholder="Twitter Handle" required>
+                    </div>
+                  </div>
+                  <div class="text-center">
+                    <button type="submit" class="btn-get-started" id="predictButton">
+                      <i class="fas fa-magic mr-2"></i> Analyze Personality
+                    </button>
+                  </div>
+                </form>
+
+                <!-- Progress Bar -->
+                <div id="progressSection" style="display: none;" class="mt-4">
+                  <div class="progress-status text-center mb-2">
+                    <span id="statusMessage">Initializing...</span>
+                  </div>
+                  <div class="progress">
+                    <div id="predictionProgress" class="progress-bar progress-bar-striped progress-bar-animated" 
+                         role="progressbar" style="width: 0%"></div>
+                  </div>
+                  <div class="progress-steps mt-2">
+                    <div class="step active" id="step1">
+                      <i class="fas fa-search"></i> Fetching Tweets
+                    </div>
+                    <div class="step" id="step2">
+                      <i class="fas fa-database"></i> Processing Data
+                    </div>
+                    <div class="step" id="step3">
+                      <i class="fas fa-brain"></i> Making Prediction
+                    </div>
+                    <div class="step" id="step4">
+                      <i class="fas fa-check"></i> Complete
+                    </div>
+                  </div>
+                </div>
+
+                <script>
+                  document.getElementById('predictionForm').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    // Show progress section
+                    document.getElementById('progressSection').style.display = 'block';
+                    
+                    // Reset progress
+                    document.getElementById('predictionProgress').style.width = '0%';
+                    document.getElementById('statusMessage').textContent = 'Initializing...';
+                    
+                    // Reset steps
+                    document.querySelectorAll('.step').forEach(step => {
+                      step.classList.remove('active', 'completed');
+                    });
+                    document.getElementById('step1').classList.add('active');
+                    
+                    // Simulate progress
+                    let progress = 0;
+                    const interval = setInterval(() => {
+                      progress += 5;
+                      document.getElementById('predictionProgress').style.width = `${progress}%`;
+                      
+                      if (progress >= 25) {
+                        document.getElementById('step1').classList.add('completed');
+                        document.getElementById('step2').classList.add('active');
+                        document.getElementById('statusMessage').textContent = 'Processing Data...';
+                      }
+                      if (progress >= 50) {
+                        document.getElementById('step2').classList.add('completed');
+                        document.getElementById('step3').classList.add('active');
+                        document.getElementById('statusMessage').textContent = 'Making Prediction...';
+                      }
+                      if (progress >= 75) {
+                        document.getElementById('step3').classList.add('completed');
+                        document.getElementById('step4').classList.add('active');
+                        document.getElementById('statusMessage').textContent = 'Completing Analysis...';
+                      }
+                      if (progress >= 100) {
+                        clearInterval(interval);
+                      }
+                    }, 200);
+                    
+                    // Submit form
+                    fetch('/predict', {
+                      method: 'POST',
+                      body: new FormData(this)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                      if (data.error) {
+                        document.getElementById('statusMessage').textContent = data.error;
+                        document.getElementById('predictionProgress').classList.add('bg-danger');
+                      } else {
+                        window.location.href = data.redirect_url;
+                      }
+                    })
+                    .catch(error => {
+                      document.getElementById('statusMessage').textContent = 'An error occurred. Please try again.';
+                      document.getElementById('predictionProgress').classList.add('bg-danger');
+                    });
+                  });
+                </script>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% else %}
+        <div class="text-center">
+          <h2 class="mb-4">Ready to Discover Your Personality?</h2>
+          <a href="/login" class="btn-get-started">
+            <i class="fab fa-twitter mr-2"></i> Login with Twitter
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </section>
+    <!-- End Get Started Section -->
+
+    <!-- ======= How It Works Section ======= -->
+    <section id="how-it-works" class="how-it-works">
+      <div class="container">
+        <div class="section-title text-center mb-5" data-aos="fade-up">
+          <h2>Process</h2>
+          <p>How Personality Prediction System Works</p>
+        </div>
+
+        <div class="row">
+          <div class="col-lg-3" data-aos="fade-up" data-aos-delay="100">
+            <div class="step-box">
+              <div class="step-number">1</div>
+              <h4>Connect</h4>
+              <p>Login with your Twitter account securely</p>
+            </div>
+          </div>
+
+          <div class="col-lg-3" data-aos="fade-up" data-aos-delay="200">
+            <div class="step-box">
+              <div class="step-number">2</div>
+              <h4>Analyze</h4>
+              <p>Our AI analyzes your recent tweets</p>
+            </div>
+          </div>
+
+          <div class="col-lg-3" data-aos="fade-up" data-aos-delay="300">
+            <div class="step-box">
+              <div class="step-number">3</div>
+              <h4>Process</h4>
+              <p>Advanced algorithms determine your type</p>
+            </div>
+          </div>
+
+          <div class="col-lg-3" data-aos="fade-up" data-aos-delay="400">
+            <div class="step-box">
+              <div class="step-number">4</div>
+              <h4>Results</h4>
+              <p>Get your detailed personality insights</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======= About Section ======= -->
+    <section id="about" class="about">
+      <div class="container">
+        <div class="section-title" data-aos="fade-up">
+          <h2>About</h2>
+          <p>Understand Your Personality Type</p>
+        </div>
+
+        <div class="row align-items-center">
+          <div class="col-xl-5 col-lg-6" data-aos="fade-right">
+            <div class="about-img-wrapper">
+              <img src="{{ url_for('static', filename='assets/img/cogfunc.png') }}" class="about-img" alt="Cognitive Functions">
+            </div>
+          </div>
+
+          <div class="col-xl-7 col-lg-6 icon-boxes d-flex flex-column justify-content-center py-5 px-lg-5"
+            data-aos="fade-left">
+            <h3>Get your personality type using your own social media!</h3>
+            <p>We'll predict your Myers-Briggs Type Indicator based on your tweets using advanced AI technology.</p>
+
+            <div class="icon-box" data-aos="zoom-in" data-aos-delay="100">
+              <div class="icon"><i class="bx bx-fingerprint"></i></div>
+              <h4 class="title">Overview</h4>
+              <p class="description">
+                The Myers-Briggs Type Indicator is one of the most recognized personality frameworks in psychology and professional development.
+              </p>
+            </div>
+
+            <div class="icon-box" data-aos="zoom-in" data-aos-delay="200">
+              <div class="icon"><i class="bx bx-gift"></i></div>
+              <h4 class="title">The 16 Types</h4>
+              <p class="description">
+                Based on four dichotomies: Introversion/Extroversion, Sensing/Intuition, Thinking/Feeling, and Judging/Perceiving.
+              </p>
+            </div>
+
+            <div class="icon-box" data-aos="zoom-in" data-aos-delay="300">
+              <div class="icon"><i class="bx bx-atom"></i></div>
+              <h4 class="title">AI-Powered Analysis</h4>
+              <p class="description">
+                Using state-of-the-art natural language processing to analyze your social media presence and determine your personality type.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- End About Section -->
+
+    <!-- ======= Team Section ======= -->
+    <section id="team" class="team">
+      <div class="container">
+        <div class="section-title" data-aos="fade-up">
+          <h2>Team</h2>
+          <p>Meet Our Team</p>
+        </div>
+
+        <div class="row justify-content-center">
+          <div class="col-lg-3 col-md-6">
+            <div class="member" data-aos="zoom-in" data-aos-delay="100">
+              <div class="pic">
+                <img src="{{ url_for('static', filename='assets/img/mansoor.jpg') }}" class="img-fluid" alt="">
+              </div>
+              <div class="member-info">
+                <h4>Mansoor Akhtar</h4>
+                <span>AI Engineer</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-3 col-md-6">
+            <div class="member" data-aos="zoom-in" data-aos-delay="200">
+              <div class="pic">
+                <img src="{{ url_for('static', filename='assets/img/usama.jpg') }}" class="img-fluid" alt="">
+              </div>
+              <div class="member-info">
+                <h4>Usama Khalid</h4>
+                <span>ML Engineer</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- End Team Section -->
+
+  </main>
+  <!-- End #main -->
+
+  <!-- ======= Footer ======= -->
+  <footer id="footer">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-4 footer-info">
+          <h3>Personality Prediction System</h3>
+          <p>
+            Empowering individuals with AI-driven personality insights through social media analysis.
+          </p>
+          <div class="social-links mt-3">
+            <a href="#" class="twitter"><i class="fab fa-twitter"></i></a>
+            <a href="#" class="facebook"><i class="fab fa-facebook"></i></a>
+            <a href="#" class="instagram"><i class="fab fa-instagram"></i></a>
+            <a href="#" class="linkedin"><i class="fab fa-linkedin"></i></a>
+            <a href="#" class="github"><i class="fab fa-github"></i></a>
+          </div>
+        </div>
+
+        <div class="col-lg-4 footer-links">
+          <h4>Useful Links</h4>
+          <ul>
+            <li><i class="fas fa-chevron-right mr-2"></i> <a href="#hero">Home</a></li>
+            <li><i class="fas fa-chevron-right mr-2"></i> <a href="#about">About us</a></li>
+            <li><i class="fas fa-chevron-right mr-2"></i> <a href="#features">Features</a></li>
+            <li><i class="fas fa-chevron-right mr-2"></i> <a href="#how-it-works">How it Works</a></li>
+            <li><i class="fas fa-chevron-right mr-2"></i> <a href="#team">Team</a></li>
+          </ul>
+        </div>
+
+        <div class="col-lg-4 footer-links">
+          <h4>Our Services</h4>
+          <ul>
+            <li><i class="fas fa-chevron-right mr-2"></i> <a href="#">Personality Analysis</a></li>
+            <li><i class="fas fa-chevron-right mr-2"></i> <a href="#">Social Media Insights</a></li>
+            <li><i class="fas fa-chevron-right mr-2"></i> <a href="#">MBTI Assessment</a></li>
+            <li><i class="fas fa-chevron-right mr-2"></i> <a href="#">AI Technology</a></li>
+            <li><i class="fas fa-chevron-right mr-2"></i> <a href="#">Data Analytics</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="container mt-4">
+      <div class="copyright">
+        &copy; Copyright <strong><span>Personality Prediction System</span></strong>. All Rights Reserved
+      </div>
+      <div class="credits">
+        Designed by <a href="#">Mansoor Akhtar & Usama Khalid</a>
+      </div>
+    </div>
+  </footer>
+  <!-- End Footer -->
+
+  <a href="#" class="back-to-top"><i class="fas fa-arrow-up"></i></a>
+  <div id="preloader"></div>
+
+  <!-- Vendor JS Files -->
+  <script src="{{ url_for('static', filename='assets/vendor/jquery/jquery.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/vendor/jquery.easing/jquery.easing.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/vendor/php-email-form/validate.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/vendor/venobox/venobox.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/vendor/waypoints/jquery.waypoints.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/vendor/counterup/counterup.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/vendor/owl.carousel/owl.carousel.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/vendor/aos/aos.js') }}"></script>
+
+  <!-- Template Main JS File -->
+  <script src="{{ url_for('static', filename='assets/js/main.js') }}"></script>
+
+  <script>
+    // Initialize AOS
+    AOS.init({
+      duration: 1000,
+      easing: 'ease-in-out',
+      once: true,
+      mirror: false
+    });
+
+    // Counter Animation
+    function animateCounter(element) {
+      const target = parseInt(element.getAttribute('data-counter'));
+      const duration = 2000;
+      const step = target / (duration / 16);
+      let current = 0;
+
+      const timer = setInterval(() => {
+        current += step;
+        if (current >= target) {
+          element.textContent = target;
+          clearInterval(timer);
+        } else {
+          element.textContent = Math.round(current);
+        }
+      }, 16);
+    }
+
+    // Start counter animation when element is in view
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const counters = entry.target.querySelectorAll('.stat-number');
+          counters.forEach(counter => animateCounter(counter));
+          observer.unobserve(entry.target);
+        }
+      });
+    });
+
+    observer.observe(document.querySelector('.stats-section'));
+
+    // Header scroll class
+    $(window).scroll(function() {
+      if ($(this).scrollTop() > 100) {
+        $('#header').addClass('header-scrolled');
+        $('#header').removeClass('header-transparent');
+      } else {
+        $('#header').removeClass('header-scrolled');
+        if($('#hero').length) {
+          $('#header').addClass('header-transparent');
+        }
+      }
+    });
+
+    if ($(window).scrollTop() > 100) {
+      $('#header').addClass('header-scrolled');
+      $('#header').removeClass('header-transparent');
+    }
+  </script>
+
+</body>
+</html>
