@@ -58,7 +58,7 @@ License:
 MIT License
 
 Author:
-[Your Name]
+[Mansoor Akhtr]
 
 Version:
 1.0.0 
