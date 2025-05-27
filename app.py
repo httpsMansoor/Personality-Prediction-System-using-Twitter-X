@@ -37,7 +37,9 @@ TOKEN_URL = "https://api.twitter.com/2/oauth2/token"
 SCOPES = ["tweet.read", "users.read"]
 
 # Load personality prediction model
-classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
+classifier = pipeline("zero-shot-classification", 
+                     model="models/facebook/bart-large-mnli",
+                     local_files_only=True)
 
 MBTI_TYPES = [
     "INTJ", "INTP", "ENTJ", "ENTP", "INFJ", "INFP", "ENFJ", "ENFP",
