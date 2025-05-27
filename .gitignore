@@ -35,8 +35,9 @@ ENV/
 
 # Project specific
 transformers/
+models/
 *.log
 
 # OS specific
 .DS_Store
-Thumbs.db 
+Thumbs.db
