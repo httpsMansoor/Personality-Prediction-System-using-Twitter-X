@@ -1,176 +1,62 @@
 import os
-import secrets
-import hashlib
-import base64
-import csv
-import pandas as pd
-from datetime import datetime
-from flask import Flask, redirect, request, session, render_template, url_for, jsonify
-from requests_oauthlib import OAuth2Session
-from transformers import pipeline
-from dotenv import load_dotenv
 import logging
+from flask import Flask, redirect, request, session, render_template, url_for, jsonify
+from auth import generate_pkce_pair
+from twitter import TwitterService
+from prediction import (
+    get_stored_prediction,
+    save_prediction,
+    predict_personality,
+    get_prediction_stats
+)
+from config import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
 
-# Load environment variables from .env file
-load_dotenv()
-
-# Validate required environment variables
-required_env_vars = ['CLIENT_ID', 'CLIENT_SECRET', 'REDIRECT_URI']
-missing_vars = [var for var in required_env_vars if not os.getenv(var)]
-if missing_vars:
-    raise EnvironmentError(f"Missing required environment variables: {', '.join(missing_vars)}")
-
-# Allow insecure transport for OAuth (for development)
-os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
-
-app = Flask(__name__)
-app.secret_key = os.getenv('SECRET_KEY', 'your_secret_key')  # Use environment variable for secret key
-
-# Twitter OAuth 2.0 Credentials
-CLIENT_ID = os.getenv('CLIENT_ID')
-CLIENT_SECRET = os.getenv('CLIENT_SECRET')
-REDIRECT_URI = os.getenv('REDIRECT_URI')
-
-AUTHORIZATION_BASE_URL = "https://twitter.com/i/oauth2/authorize"
-TOKEN_URL = "https://api.twitter.com/2/oauth2/token"
-
-SCOPES = ["tweet.read", "users.read"]
-
-# Load personality prediction model
-classifier = pipeline("zero-shot-classification", 
-                     model="models/facebook/bart-large-mnli",
-                     local_files_only=True)
-
-MBTI_TYPES = [
-    "INTJ", "INTP", "ENTJ", "ENTP", "INFJ", "INFP", "ENFJ", "ENFP",
-    "ISTJ", "ISFJ", "ESTJ", "ESFJ", "ISTP", "ISFP", "ESTP", "ESFP"
-]
-
-# CSV file path for storing predictions
-PREDICTIONS_FILE = "predictions.csv"
-
-# Add logging configuration
+# Configure logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-def ensure_predictions_file_exists():
-    """Create predictions CSV file if it doesn't exist."""
-    if not os.path.exists(PREDICTIONS_FILE):
-        with open(PREDICTIONS_FILE, 'w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow(['username', 'personality', 'tweets', 'prediction_date'])
-
-def get_stored_prediction(username):
-    """Get stored prediction for a username if it exists."""
-    if not os.path.exists(PREDICTIONS_FILE):
-        return None
-    
-    df = pd.read_csv(PREDICTIONS_FILE)
-    user_data = df[df['username'] == username]
-    
-    if not user_data.empty:
-        return {
-            'personality': user_data.iloc[0]['personality'],
-            'tweets': eval(user_data.iloc[0]['tweets']),  # Convert string back to list
-            'prediction_date': user_data.iloc[0]['prediction_date']
-        }
-    return None
-
-def save_prediction(username, personality, tweets):
-    """Save prediction to CSV file."""
-    ensure_predictions_file_exists()
-    
-    # Convert tweets list to string for storage
-    tweets_str = str(tweets)
-    current_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    
-    df = pd.read_csv(PREDICTIONS_FILE) if os.path.exists(PREDICTIONS_FILE) else pd.DataFrame(columns=['username', 'personality', 'tweets', 'prediction_date'])
-    
-    # Update existing prediction or add new one
-    if username in df['username'].values:
-        df.loc[df['username'] == username] = [username, personality, tweets_str, current_date]
-    else:
-        new_row = pd.DataFrame([[username, personality, tweets_str, current_date]], 
-                             columns=['username', 'personality', 'tweets', 'prediction_date'])
-        df = pd.concat([df, new_row], ignore_index=True)
-    
-    df.to_csv(PREDICTIONS_FILE, index=False)
-
-def generate_pkce_pair():
-    """Generates a PKCE code verifier and challenge."""
-    code_verifier = secrets.token_urlsafe(64)
-    code_challenge = base64.urlsafe_b64encode(
-        hashlib.sha256(code_verifier.encode()).digest()
-    ).rstrip(b'=').decode('utf-8')
-    return code_verifier, code_challenge
-
-def get_prediction_stats():
-    """Calculate statistics from predictions.csv file."""
-    if not os.path.exists(PREDICTIONS_FILE):
-        return {
-            'total_predictions': 0,
-            'mbti_types': len(MBTI_TYPES),
-            'accuracy_rate': 95,  # Default accuracy rate
-            'hour_support': 24
-        }
-    
-    df = pd.read_csv(PREDICTIONS_FILE)
-    total_predictions = len(df)
-    logger.debug(f"Total predictions found: {total_predictions}")
-    
-    return {
-        'total_predictions': total_predictions,
-        'mbti_types': len(MBTI_TYPES),
-        'accuracy_rate': 95,  # Default accuracy rate
-        'hour_support': 24
-    }
+app = Flask(__name__)
+app.secret_key = os.getenv('SECRET_KEY', 'your_secret_key')
 
 @app.route("/")
 def index():
-    """Always show index.html; do not auto-redirect logged-in users."""
+    """Homepage with a login link."""
     stats = get_prediction_stats()
-    logger.debug(f"Current stats: {stats}")  # Add debug logging
-    return render_template("index.html", logged_in="oauth_token" in session, stats=stats)
+    logged_in = "oauth_token" in session
+    return render_template("index.html", stats=stats, logged_in=logged_in)
 
 @app.route("/login")
 def login():
+    """Handles Twitter OAuth login."""
     if "oauth_token" in session:
         return redirect(url_for("index"))
 
     code_verifier, code_challenge = generate_pkce_pair()
     session["code_verifier"] = code_verifier
 
-    twitter = OAuth2Session(CLIENT_ID, scope=SCOPES, redirect_uri=REDIRECT_URI)
-    auth_url, state = twitter.authorization_url(
-        AUTHORIZATION_BASE_URL,
-        code_challenge=code_challenge,
-        code_challenge_method="S256"
-    )
-    session["oauth_state"] = state
+    twitter = TwitterService()
+    auth_url = twitter.get_authorization_url(code_challenge)
     return redirect(auth_url)
 
 @app.route("/callback")
 def callback():
+    """Handles OAuth callback."""
     if "code_verifier" not in session:
         return redirect(url_for("login"))
 
-    twitter = OAuth2Session(CLIENT_ID, state=session.get("oauth_state"), redirect_uri=REDIRECT_URI)
-
+    twitter = TwitterService()
     try:
         token = twitter.fetch_token(
-            TOKEN_URL,
-            client_secret=CLIENT_SECRET,
-            code_verifier=session["code_verifier"],
-            authorization_response=request.url
+            session["code_verifier"],
+            request.url
         )
         session["oauth_token"] = token
         return redirect(url_for("index"))
-
     except Exception as e:
         return f"Error during authentication: {str(e)}", 400
 
 @app.route("/predict", methods=["GET", "POST"])
-def predict_personality():
+def predict_personality_route():
     """Fetches tweets and predicts MBTI personality."""
     if "oauth_token" not in session:
         return jsonify({"error": "Please log in first"}), 401
@@ -199,12 +85,11 @@ def predict_personality():
             })
 
     # If no stored prediction or force refresh, fetch and predict
-    twitter = OAuth2Session(CLIENT_ID, token=session["oauth_token"])
+    twitter = TwitterService(token=session["oauth_token"])
     
     try:
         # Get user ID from username
-        user_response = twitter.get(f"https://api.twitter.com/2/users/by/username/{username}")
-        user_data = user_response.json()
+        user_data = twitter.get_user_by_username(username)
 
         if "data" not in user_data:
             return jsonify({"error": "Twitter user not found. Please check the username."}), 400
@@ -212,18 +97,14 @@ def predict_personality():
         user_id = user_data["data"]["id"]
 
         # Fetch recent tweets
-        tweet_response = twitter.get(
-            f"https://api.twitter.com/2/users/{user_id}/tweets?max_results=5&tweet.fields=text"
-        )
-        tweets = tweet_response.json()
+        tweets = twitter.get_user_tweets(user_id)
 
         if not tweets.get("data"):
             return jsonify({"error": "No tweets found for this user. Please ensure the account has public tweets."}), 400
 
         # Predict MBTI personality
         tweet_texts = [tweet["text"] for tweet in tweets["data"]]
-        predictions = classifier(" ".join(tweet_texts), MBTI_TYPES)
-        predicted_personality = predictions["labels"][0]
+        predicted_personality = predict_personality(tweet_texts)
 
         # Save prediction to CSV
         save_prediction(username, predicted_personality, tweet_texts)
@@ -239,7 +120,6 @@ def predict_personality():
         })
 
     except Exception as e:
-        app.logger.error(f"Error processing request: {str(e)}")
         return jsonify({"error": "An error occurred while processing your request. Please try again."}), 500
 
 @app.route("/personality")
