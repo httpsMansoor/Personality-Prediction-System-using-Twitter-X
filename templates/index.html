@@ -846,32 +846,6 @@
                     });
                     document.getElementById('step1').classList.add('active');
                     
-                    // Simulate progress
-                    let progress = 0;
-                    const interval = setInterval(() => {
-                      progress += 5;
-                      document.getElementById('predictionProgress').style.width = `${progress}%`;
-                      
-                      if (progress >= 25) {
-                        document.getElementById('step1').classList.add('completed');
-                        document.getElementById('step2').classList.add('active');
-                        document.getElementById('statusMessage').textContent = 'Processing Data...';
-                      }
-                      if (progress >= 50) {
-                        document.getElementById('step2').classList.add('completed');
-                        document.getElementById('step3').classList.add('active');
-                        document.getElementById('statusMessage').textContent = 'Making Prediction...';
-                      }
-                      if (progress >= 75) {
-                        document.getElementById('step3').classList.add('completed');
-                        document.getElementById('step4').classList.add('active');
-                        document.getElementById('statusMessage').textContent = 'Completing Analysis...';
-                      }
-                      if (progress >= 100) {
-                        clearInterval(interval);
-                      }
-                    }, 200);
-                    
                     // Submit form
                     fetch('/predict', {
                       method: 'POST',
@@ -883,7 +857,22 @@
                         document.getElementById('statusMessage').textContent = data.error;
                         document.getElementById('predictionProgress').classList.add('bg-danger');
                       } else {
-                        window.location.href = data.redirect_url;
+                        // Update progress based on response
+                        document.getElementById('predictionProgress').style.width = `${data.progress}%`;
+                        document.getElementById('statusMessage').textContent = data.status;
+                        
+                        // Update steps
+                        for (let i = 1; i <= data.step; i++) {
+                          document.getElementById(`step${i}`).classList.add('completed');
+                          if (i < data.step) {
+                            document.getElementById(`step${i + 1}`).classList.add('active');
+                          }
+                        }
+                        
+                        // Redirect after a short delay to show completion
+                        setTimeout(() => {
+                          window.location.href = data.redirect_url;
+                        }, 500);
                       }
                     })
                     .catch(error => {

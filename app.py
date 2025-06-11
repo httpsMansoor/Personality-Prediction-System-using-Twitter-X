@@ -179,21 +179,26 @@ def predict_personality():
         return redirect(url_for("index"))
 
     username = request.form.get("username", "").strip().lstrip('@')
+    force_refresh = request.form.get("force_refresh", "false").lower() == "true"
     
     if not username:
         return jsonify({"error": "Please enter a Twitter username"}), 400
 
-    # Check if we have a stored prediction
-    stored_prediction = get_stored_prediction(username)
-    if stored_prediction:
-        return jsonify({
-            "redirect_url": url_for("show_personality", 
-                                  personality=stored_prediction['personality'],
-                                  username=username,
-                                  is_cached=True)
-        })
+    # Check if we have a stored prediction and not forcing refresh
+    if not force_refresh:
+        stored_prediction = get_stored_prediction(username)
+        if stored_prediction:
+            return jsonify({
+                "redirect_url": url_for("show_personality", 
+                                      personality=stored_prediction['personality'],
+                                      username=username,
+                                      is_cached=True),
+                "progress": 100,
+                "status": "Using cached prediction",
+                "step": 4
+            })
 
-    # If no stored prediction, fetch and predict
+    # If no stored prediction or force refresh, fetch and predict
     twitter = OAuth2Session(CLIENT_ID, token=session["oauth_token"])
     
     try:
@@ -227,7 +232,10 @@ def predict_personality():
             "redirect_url": url_for("show_personality", 
                                   personality=predicted_personality,
                                   username=username,
-                                  is_cached=False)
+                                  is_cached=False),
+            "progress": 100,
+            "status": "Analysis complete",
+            "step": 4
         })
 
     except Exception as e:
